@@ -1,0 +1,4 @@
+pytest-homeassistant-custom-component==0.13.375
+yalexs-ble @ git+https://github.com/michaelp1742/yalexs-ble@5b3dc0c5191129682fd1e01f07a5128ac36aaca0
+mypy==2.4.0
+pre-commit==4.2.0

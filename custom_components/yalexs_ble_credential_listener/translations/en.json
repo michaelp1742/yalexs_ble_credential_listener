@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This lock already has a credential listener entry.",
+      "already_in_progress": "A credential listener entry for this lock is already being added.",
+      "no_attribution_seam": "The installed Yale Access Bluetooth integration does not let another integration attribute its lock changes.",
+      "no_locks": "No lock is available. A lock is listed when Yale Access Bluetooth has loaded it and it has no credential listener entry yet."
+    },
+    "step": {
+      "model": {
+        "data": {
+          "lock_model": "Lock model"
+        }
+      },
+      "user": {
+        "data": {
+          "address": "Lock"
+        }
+      }
+    }
+  }
+}
