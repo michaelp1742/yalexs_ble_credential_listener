@@ -2,32 +2,39 @@
 
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from yalexs_ble import LockStatus
 
+from custom_components.yalexs_ble_credential_listener.attribution import LockAttributor
 from custom_components.yalexs_ble_credential_listener.const import (
     CONF_ATTRIBUTION,
     CONF_LOCK_MODEL,
     DOMAIN,
     OWNER_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from custom_components.yalexs_ble_credential_listener.models import LOCK_MODELS
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import ADDRESS, FRONT_ADDRESS, FRONT_TITLE, TITLE, async_setup_owner
+from . import (
+    ADDRESS,
+    CODE_SLOT_FFEE_UNLOCKED,
+    FRONT_ADDRESS,
+    FRONT_TITLE,
+    TITLE,
+    async_advance,
+    async_deliver,
+    async_setup_owner,
+    lock_status_change,
+)
 
 LOCK_MODEL_OPTIONS = [
-    {"value": "unity", "label": "Yale Unity Entrance Lock"},
-    {"value": "yrd256", "label": "Yale Assure Lock SL (YRD256) with a network module"},
-    {
-        "value": "doorman_classic",
-        "label": "Yale Doorman Classic (V2N) with the Yale Access Module",
-    },
-    {"value": "doorman_l3", "label": "Yale Doorman L3"},
-    {"value": "other", "label": "Not listed"},
+    {"value": model.key, "label": model.name} for model in LOCK_MODELS
 ]
 
 
@@ -143,11 +150,11 @@ async def test_user_flow_aborts_for_a_lock_another_flow_took(
     assert result["reason"] == reason
 
 
-@pytest.mark.parametrize("has_seam", [False])
-async def test_user_flow_aborts_without_the_attribution_seam(
+@pytest.mark.parametrize("has_hook", [False])
+async def test_user_flow_aborts_without_the_attribution_hook(
     hass: HomeAssistant,
 ) -> None:
-    """The user step aborts when core's yalexs_ble has no attribution seam."""
+    """The user step aborts when core's yalexs_ble has no attribution hook."""
     await async_setup_owner(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -155,4 +162,43 @@ async def test_user_flow_aborts_without_the_attribution_seam(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_attribution_seam"
+    assert result["reason"] == "no_attribution_hook"
+
+
+async def test_options_flow_changes_the_lock_model(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    owner_entry: MockConfigEntry,
+    attributor: LockAttributor,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A new lock model from the options flow reloads the entry, which names slots by it."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    attribution_field, lock_model_field = result["data_schema"].schema
+    assert attribution_field.default() is True
+    assert lock_model_field.default() == "unity"
+    selector = result["data_schema"].schema[lock_model_field]
+    assert selector.config["options"] == LOCK_MODEL_OPTIONS
+    assert selector.config["mode"] == "dropdown"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ATTRIBUTION: True, CONF_LOCK_MODEL: "doorman_classic"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_ATTRIBUTION: True,
+        CONF_LOCK_MODEL: "doorman_classic",
+    }
+    assert config_entry.state is ConfigEntryState.LOADED
+    reloaded = config_entry.runtime_data
+    assert isinstance(reloaded, LockAttributor)
+    assert reloaded is not attributor
+    change = lock_status_change(LockStatus.UNLOCKED)
+    reloaded.async_lock_status_changed(change)
+    await async_advance(hass, freezer, 0.6)
+    await async_deliver(owner_entry, CODE_SLOT_FFEE_UNLOCKED)
+    await async_advance(hass, freezer, 0.75)
+    assert [changed_by for changed_by, _ in change.sets] == ["Keypad slot 65518"]

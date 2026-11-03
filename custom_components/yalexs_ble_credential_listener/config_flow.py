@@ -4,8 +4,14 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -13,7 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from . import async_loaded_owners, async_seam
+from . import async_hook, async_loaded_owners
 from .const import CONF_ATTRIBUTION, CONF_LOCK_MODEL, DOMAIN
 from .models import LOCK_MODELS
 
@@ -48,8 +54,8 @@ class YaleXSBLECredentialListenerConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return await self.async_step_model()
 
-        if await async_seam(self.hass) is None:
-            return self.async_abort(reason="no_attribution_seam")
+        if await async_hook(self.hass) is None:
+            return self.async_abort(reason="no_attribution_hook")
         current_addresses = self._async_current_ids()
         self._titles = {
             address: owner.title
@@ -93,5 +99,38 @@ class YaleXSBLECredentialListenerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="model",
             data_schema=probatio.Schema(
                 {probatio.Required(CONF_LOCK_MODEL): LOCK_MODEL_SELECTOR}
+            ),
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle the Yale Access Bluetooth Credential Listener options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the attribution option and the lock model."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        options = self.config_entry.options
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_ATTRIBUTION, default=options[CONF_ATTRIBUTION]
+                    ): bool,
+                    probatio.Required(
+                        CONF_LOCK_MODEL, default=options[CONF_LOCK_MODEL]
+                    ): LOCK_MODEL_SELECTOR,
+                }
             ),
         )

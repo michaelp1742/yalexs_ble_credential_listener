@@ -3,7 +3,7 @@
     "abort": {
       "already_configured": "This lock already has a credential listener entry.",
       "already_in_progress": "A credential listener entry for this lock is already being added.",
-      "no_attribution_seam": "The installed Yale Access Bluetooth integration does not let another integration attribute its lock changes.",
+      "no_attribution_hook": "The installed Yale Access Bluetooth integration does not let another integration attribute its lock changes.",
       "no_locks": "No lock is available. A lock is listed when Yale Access Bluetooth has loaded it and it has no credential listener entry yet."
     },
     "step": {
@@ -15,6 +15,34 @@
       "user": {
         "data": {
           "address": "Lock"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "attribution_time_maximum": {
+        "name": "Attribution time maximum"
+      },
+      "attribution_time_median": {
+        "name": "Attribution time median"
+      }
+    }
+  },
+  "exceptions": {
+    "owner_not_loaded": {
+      "message": "Yale Access Bluetooth has not loaded this lock"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "attribution": "Attribute lock changes from the activity log",
+          "lock_model": "Lock model"
+        },
+        "data_description": {
+          "attribution": "Home Assistant reads each record off the lock. A record it reads never reaches the Yale Home or August app's activity feed or the cloud."
         }
       }
     }
