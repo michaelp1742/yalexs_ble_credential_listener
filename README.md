@@ -80,8 +80,9 @@ record that names the cause has arrived, and no further record has come for 0.75
 event and sets `changed_by` on the change. The state's `last_changed` stays at the lock change; the set changes the
 attribute and `last_updated`.
 
-The cause follows the change. In a field test on a Yale Unity Entrance Lock every cause was set 1.4 to 2.7 seconds
-after its change. By the record times in captures on that lock, a change with one record, such as a command over
+The cause follows the change. In field tests on a Yale Unity Entrance Lock every cause was set 0.8 to 2.9 seconds
+after its change, over 27 changes: the keypad, the fingerprint, three RF tags, the inside button, the Yale Home app
+and the lock's relock. By the record times in captures on that lock, a change with one record, such as a command over
 Bluetooth, the inside button, or an RF tag, is named about 1.3 to 1.5 seconds after it, and a keypad code, which writes
 two records, about 2 seconds after it, or up to about 2.8 seconds when the library's status poll runs between the two
 reads. The sensors below measure the times on a running lock.
