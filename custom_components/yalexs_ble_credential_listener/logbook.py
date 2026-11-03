@@ -15,8 +15,8 @@ from .const import (
     ATTR_MASTER_CODE,
     ATTR_SLOT,
     ATTR_SOURCE,
-    DOMAIN,
     EVENT_LOCK_ACTIVITY,
+    OWNER_DOMAIN,
     SOURCE_AUTO_LOCK,
     SOURCE_MANUAL,
     SOURCE_PIN,
@@ -68,4 +68,8 @@ def async_describe_events(
             LOGBOOK_ENTRY_ENTITY_ID: data[ATTR_ENTITY_ID],
         }
 
-    async_describe_event(DOMAIN, EVENT_LOCK_ACTIVITY, async_describe_lock_activity)
+    # Described under yalexs_ble, since the logbook of an entity or device keeps only
+    # the events of its config entries' domains, and the lock is yalexs_ble's.
+    async_describe_event(
+        OWNER_DOMAIN, EVENT_LOCK_ACTIVITY, async_describe_lock_activity
+    )

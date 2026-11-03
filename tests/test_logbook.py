@@ -7,7 +7,6 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.yalexs_ble_credential_listener.const import (
-    DOMAIN,
     EVENT_LOCK_ACTIVITY,
     OWNER_DOMAIN,
 )
@@ -15,6 +14,9 @@ from custom_components.yalexs_ble_credential_listener.logbook import (
     async_describe_events,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.logbook import DOMAIN as LOGBOOK_DOMAIN
+from homeassistant.components.logbook.helpers import async_determine_event_types
+from homeassistant.components.logbook.models import LogbookConfig
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -30,7 +32,7 @@ def _describer(hass: HomeAssistant) -> Callable[[Event], dict[str, Any]]:
             {(domain, event_type): describe}
         ),
     )
-    return describers[DOMAIN, EVENT_LOCK_ACTIVITY]
+    return describers[OWNER_DOMAIN, EVENT_LOCK_ACTIVITY]
 
 
 def _event(
@@ -134,3 +136,26 @@ async def test_logbook_names_the_entry_after_the_lock_device(
         "Yale Access Bluetooth lock",
     ]
     assert describe(_event(lock_device.id))["message"] == "keypad slot 1 used"
+
+
+async def test_the_logbook_of_the_lock_and_its_device_keeps_the_event(
+    hass: HomeAssistant, core_lock: er.RegistryEntry
+) -> None:
+    """The logbook filtered to core's lock entity, or to its device, keeps the lock activity event."""
+    external_events: dict[str, tuple[str, Callable[[Event], dict[str, Any]]]] = {}
+    hass.data[LOGBOOK_DOMAIN] = LogbookConfig(external_events)
+
+    # The logbook's platform hook stores each described event by its domain this way.
+    async_describe_events(
+        hass,
+        lambda domain, event_type, describe: external_events.update(
+            {event_type: (domain, describe)}
+        ),
+    )
+
+    assert EVENT_LOCK_ACTIVITY in async_determine_event_types(
+        hass, [core_lock.entity_id], None
+    )
+    assert EVENT_LOCK_ACTIVITY in async_determine_event_types(
+        hass, None, [core_lock.device_id]
+    )
