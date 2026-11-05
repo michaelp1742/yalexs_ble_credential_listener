@@ -41,8 +41,14 @@ as well, and measures how long each cause takes to arrive.
 
 ## Installation
 
-Copy `custom_components/yalexs_ble_credential_listener` into the `custom_components` folder of your Home Assistant
-configuration, then restart Home Assistant.
+With [HACS](https://hacs.xyz/):
+
+1. In HACS, open the menu at the top right and pick **Custom repositories**.
+2. Add `https://github.com/michaelp1742/yalexs_ble_credential_listener` with the type **Integration**.
+3. Find **Yale Access Bluetooth Credential Listener** in HACS, download it, and restart Home Assistant.
+
+Without HACS, copy `custom_components/yalexs_ble_credential_listener` into the `custom_components` folder of your
+Home Assistant configuration, then restart Home Assistant.
 
 ## Setup
 
