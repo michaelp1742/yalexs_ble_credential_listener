@@ -36,8 +36,8 @@ as well, and measures how long each cause takes to arrive.
 - At each start, Home Assistant installs the yalexs-ble version that Yale Access Bluetooth pins, in place of any
   other. Another version stays installed when Home Assistant runs with `--skip-pip-packages yalexs-ble`, or with
   `--skip-pip`, which skips the requirements of every integration.
-- yalexs-ble from #426 requires cryptography 50.0.2 or later, and Home Assistant 2026.10 pins cryptography 50.0.1,
-  so no cryptography version meets both.
+- yalexs-ble from #426 requires cryptography 50.0.2 or later. Home Assistant 2026.11 pins cryptography 50.0.2.
+  Home Assistant 2026.10 pins cryptography 50.0.1, so on 2026.10 no cryptography version meets both.
 
 ## Installation
 
