@@ -158,6 +158,11 @@ without its cause, which is how late an automation on `changed_by` runs.
 - They are unknown until the first time, and a reload of the entry or a restart of Home Assistant starts them afresh.
 - The maximum stays under 10 seconds, since a cause is set only within 10 seconds of its change.
 
+## Icon
+
+The integration's icon is drawn from the account tag icon (`mdi-account-tag`) of Material Design Icons by
+[Pictogrammers](https://pictogrammers.com/), which is under the Apache License 2.0.
+
 ## Development
 
 ```sh
